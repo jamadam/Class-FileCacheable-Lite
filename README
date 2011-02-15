@@ -1,18 +1,160 @@
-Class-FileCacheable-Lite
+=head1 NAME
 
-INSTALLATION
+Class::FileCacheable::Lite - Make you methods cacheable easily
 
-To install this module, run the following commands:
+=head1 SYNOPSIS
 
-    perl Makefile.PL
-    make
-    make test
-    make install
+    use base 'Class::FileCacheable';
+    
+    sub file_cache_expire {
+        my ($self, $timestamp) = @_;
+        if (some_condifion) {
+            return 1;
+        }
+    }
+    
+    sub file_cache_options {
+        return {
+            'namespace' => 'MyNamespace',
+            'cache_root' => 't/cache',
+            #...
+        };
+    }
+    
+    sub some_sub1 : FileCacheable {
+        
+        my $self = shift;
+    }
+    
+    sub some_sub2 : FileCacheable({key => $key, expire => \&expire_code_ref}) {
+        
+        my $self = shift;
+    }
 
-COPYRIGHT AND LICENSE
+=head1 DESCRIPTION
 
-Copyright (C) 2011 Sugama Keita
+This module defines an attribute "FileCacheable" which redefines your functions
+cacheable. 
+
+To use this, do following steps.
+
+=over
+
+=item use base 'Class::FileCacheable';
+
+=item override the method I<file_cache_expire>
+
+=item override the method I<file_cache_option>
+
+=item define your subs as follows
+
+    sub your_sub : FileCacheable {
+        my $self = shift;
+        # do something
+    }
+
+=back
+
+That's it.
+
+=head1 METHODS
+
+=head2 file_cache_expire
+
+This is a callback method for specifying the condition for cache expiretion.
+Your module can override the method if necessary.
+
+file_cache_exipre will be called as instance method when the target method
+called. This method takes timestamp of the cache as argument.
+
+    sub file_cache_expire {
+        my ($self, $timestamp) = @_;
+        if (some_condifion) {
+            return 1;
+        }
+    }
+
+file_cache_exipre should return 1 or 0. 1 causes the cache *EXPIRED*
+
+=head2 file_cache_options
+
+This is a callback method for specifying options. Your module can override
+the method if necessary.
+
+    sub file_cache_options {
+        return {
+            'namespace' => 'Test',
+            'cache_root' => 't/cache',
+        };
+    }
+
+you can set options bellow
+
+=over
+
+=item namespace
+
+=item cache_root
+
+=item number_cache_id
+
+This takes 1 or 0 for value. '1' causes the cache ids automatically numbered so
+the caches doesn't affect in single process. This is useful if you want to
+cache the function calls as a sequence.
+
+=back
+
+=head2 file_cache_purge
+
+Not implemented yet
+
+=head1 EXAMPLE
+
+    package GetExampleDotCom;
+    use strict;
+    use warnings;
+    use base 'Class::FileCacheable::Lite';
+    use LWP::Simple;
+        
+        sub new {
+            my ($class, $url) = @_;
+            return bless {url => $url}, $class;
+        }
+        
+        sub get_url : FileCacheable {
+            my $self = shift;
+            return LWP::Simple::get($self->{url});
+        }
+    
+        sub file_cache_expire {
+            my ($self, $timestamp) = @_;
+            if (time() - $timestamp > 86400) {
+                return 1;
+            }
+        }
+        
+        sub file_cache_options {
+            my $self = shift;
+            return {
+                namespace => 'Test',
+                cache_root => 't/cache',
+                default_key => $self->{url},
+            };
+        }
+
+=head1 SEE ALSO
+
+L<Class::FileCacheable>
+
+=head1 AUTHOR
+
+Sugama Keita, E<lt>sugama@jamadam.comE<gt>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2011 by Sugama Keita.
 
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
+=cut

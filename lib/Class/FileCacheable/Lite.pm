@@ -97,8 +97,7 @@ __END__
 
 =head1 NAME
 
-Class::FileCacheable::Lite - 
-
+Class::FileCacheable::Lite - Make you methods cacheable easily
 
 =head1 SYNOPSIS
 
