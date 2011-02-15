@@ -101,7 +101,7 @@ Class::FileCacheable::Lite - Make you methods cacheable easily
 
 =head1 SYNOPSIS
 
-    use base 'Class::FileCacheable';
+    use base 'Class::FileCacheable::Lite';
     
     sub file_cache_expire {
         my ($self, $timestamp) = @_;
