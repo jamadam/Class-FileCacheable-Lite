@@ -19,6 +19,19 @@ our $VERSION = '0.02';
     }
     
     ### ---
+    ### return options
+    ### ---
+    sub file_cache_options {
+        return {
+            cache_root => File::Spec->catdir(File::Spec->tmpdir(), 'FileCache'),
+            cache_depth     => 3,
+            directory_umask => '000',
+            number_cache_id => 0,
+            namespace       => 'Default',
+        };
+    }
+    
+    ### ---
     ### Define FileCacheable attribute
     ### ---
     sub FileCacheable : ATTR(CHECK) {
@@ -29,18 +42,27 @@ our $VERSION = '0.02';
         
         *{$sym} = sub {
             my $self = shift;
-            my $opt = $self->file_cache_options;
-            
-            my $cache_id_seed = $data->[0]->{key} || $opt->{default_key};
+            my %opt = (
+                %{__PACKAGE__->file_cache_options},
+                %{$self->file_cache_options}
+            );
+            my $cache_id_seed = $data->[0]->{key} || $opt{default_key};
             my $cache_id = *{$sym}. "\t". ($cache_id_seed || '');
-            if ($opt->{number_cache_id}) {
+            if ($opt{number_cache_id}) {
                 $cache_id .= "\t" . ($fnames{*{$sym}}++);
             }
             
             my $output;
             
+            my @idarray = split(//, md5_hex($cache_id), $opt{cache_depth} + 1);
+            
             ### check if cache has expired
-            my $fpath = File::Spec->catfile($opt->{cache_root}, $opt->{namespace}, md5_hex($cache_id));
+            my $fpath = File::Spec->catfile(
+                $opt{cache_root},
+                $opt{namespace},
+                @idarray,
+            );
+            
             if (-f $fpath) {
                 if (my $cache_tp = (stat $fpath)[9]) {
                     if ($data->[0]->{expire}) {
@@ -57,11 +79,11 @@ our $VERSION = '0.02';
             if (! defined($output)) {
                 no strict 'refs';
                 $output = $self->$ref(@_);
+                umask $opt{directory_umask};
                 
-                umask 006;
-                mkpath(File::Spec->catfile($opt->{cache_root}, $opt->{namespace}));
+                pop(@idarray);
+                mkpath(File::Spec->catfile($opt{cache_root}, $opt{namespace}, @idarray));
                 
-                umask 011;
                 if (open(my $OUT, '>:utf8', $fpath)) {
                     binmode($OUT, "utf8");
                     print $OUT $output;
@@ -189,9 +211,30 @@ you can set options bellow
 
 =over
 
+=item cache_root
+
+The location in the filesystem that will hold the root of the cache. Defaults
+to the 'FileCache' under the OS default temp directory ( often '/tmp' on
+UNIXes ) unless explicitly set.
+
+=item cache_depth
+
+The number of subdirectories deep to cache object item. This should be large
+enough that no cache directory has more than a few hundred objects. Defaults
+to 3 unless explicitly set.
+
+=item directory_umask
+
+The directories in the cache on the filesystem should be globally writable to
+allow for multiple users. While this is a potential security concern, the
+actual cache entries are written with the user's umask, thus reducing the risk
+of cache poisoning. If you desire it to only be user writable, set
+the 'directory_umask' option to '077' or similar. Defaults to '000' unless
+explicitly set.
+
 =item namespace
 
-=item cache_root
+The namespace associated with this cache. Defaults to "Default" if not explicitly set.
 
 =item number_cache_id
 
