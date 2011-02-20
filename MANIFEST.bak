@@ -6,3 +6,11 @@ README
 t/00_load.t
 t/99_pod.t
 t/99_podcoverage.t
+t/basic.t
+t/basic2.t
+t/expire.t
+t/lib/TestModule3.pm
+t/lib/TestModule4.pm
+t/lib/TestModule5.pm
+t/lib/TestModule6.pm
+t/lib/TestModule7.pm

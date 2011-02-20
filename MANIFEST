@@ -14,3 +14,5 @@ t/lib/TestModule4.pm
 t/lib/TestModule5.pm
 t/lib/TestModule6.pm
 t/lib/TestModule7.pm
+t/perlcritic.t
+t/perlcriticrc
