@@ -2,3 +2,6 @@ Revision history for Class-FileCacheable-Lite
 
 0.01 2011/02/15
   - initial release
+
+0.02 2011/02/21
+ - Fixed: Attribute-associated data has not worked
