@@ -37,6 +37,7 @@ our $VERSION = '0.02';
     sub FileCacheable : ATTR(CHECK) {
         
         my($pkg, $sym, $ref, undef, $data, undef) = @_;
+        my $args = $data ? {@$data} : {};
         
         no warnings 'redefine';
         
@@ -46,7 +47,7 @@ our $VERSION = '0.02';
                 %{__PACKAGE__->file_cache_options},
                 %{$self->file_cache_options}
             );
-            my $cache_id_seed = $data->[0]->{key} || $opt{default_key};
+            my $cache_id_seed = $args->{key} || $opt{default_key};
             my $cache_id = *{$sym}. "\t". ($cache_id_seed || '');
             if ($opt{number_cache_id}) {
                 $cache_id .= "\t" . ($fnames{*{$sym}}++);
@@ -65,8 +66,8 @@ our $VERSION = '0.02';
             
             if (-f $fpath) {
                 if (my $cache_tp = (stat $fpath)[9]) {
-                    if ($data->[0]->{expire}) {
-                        if (! $data->[0]->{expire}->($cache_tp)) {
+                    if ($args->{expire}) {
+                        if (! $args->{expire}->($cache_tp)) {
                             $output = _get_cache($fpath);
                         }
                     } elsif (! $self->file_cache_expire($cache_tp)) {
