@@ -31,7 +31,7 @@ use base 'Class::FileCacheable::Lite';
         };
     }
     
-    sub sub2 : FileCacheable({expire => \&sub2_cache_expire}) {
+    sub sub2 : FileCacheable(expire => \&sub2_cache_expire) {
         my $class = shift;
         return shift;
     }
