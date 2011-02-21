@@ -67,7 +67,7 @@ our $VERSION = '0.02';
             if (-f $fpath) {
                 if (my $cache_tp = (stat $fpath)[9]) {
                     if ($args->{expire}) {
-                        if (! $args->{expire}->($cache_tp)) {
+                        if (! $args->{expire}->($self, $cache_tp)) {
                             $output = _get_cache($fpath);
                         }
                     } elsif (! $self->file_cache_expire($cache_tp)) {
