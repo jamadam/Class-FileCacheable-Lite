@@ -7,7 +7,7 @@ use 5.005;
 use File::Spec;
 use File::Path;
 use Fcntl qw(:flock);
-our $VERSION = '0.02';
+our $VERSION = '0.03';
     
     my %fnames;
     
@@ -80,6 +80,11 @@ our $VERSION = '0.02';
             if (! defined($output)) {
                 no strict 'refs';
                 $output = $self->$ref(@_);
+                
+                if (! defined $output) {
+                    return;
+                }
+                
                 umask $opt{directory_umask};
                 
                 pop(@idarray);
